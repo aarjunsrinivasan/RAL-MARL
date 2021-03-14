@@ -1,4 +1,4 @@
-# IROS-MARL
+# RAL-MARL
 
 # Env
 git clone https://github.com/eleurent/highway-env.git
