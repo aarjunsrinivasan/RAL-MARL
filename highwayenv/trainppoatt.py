@@ -375,7 +375,7 @@ if __name__ == "__main__":
         model.save("ppo-highway_tr1")
 
 
-
+        ################## 2nd training
         ## Training adv agent and set ego agents policy as the model that was trained
         env = make_configure_env(**env_kwargs_adv)
         env.switch_to_adv_training(True)  # this takes care to use the adv reward function 
@@ -398,6 +398,32 @@ if __name__ == "__main__":
         # Train the agent
         model_adv.learn(total_timesteps=300*1000, tb_log_name="second_run")
         model_adv.save("ppo-highway_tr2")
+
+
+
+        ########### 3rd training
+
+        ## Training adv agent and set ego agents policy as the model that was trained
+        env = make_configure_env(**env_kwargs_adv)
+        env.road.vehicles[1].freezeTraining()
+        env.road.vehicles[1].set_policy(model_adv) ## controlled vehicle in the prev training is now the other vehicle
+        '''
+            tr1: c: v1: advTr, v2:idm -> road [v1, v2:IDMPolicy]
+            tr2: c: v1: advTr, v2: advTr -> road[v1, v2:tr1_policy]
+            tr3: c: v1: advTr, v2: advTr -> road[v1, v2:tr2_policy]
+
+        '''
+
+        model_tr3 = PPO("MlpPolicy", env,
+                    n_steps=512 // n_cpu,
+                    batch_size=64,
+                    learning_rate=2e-3,
+                    policy_kwargs=policy_kwargs,
+                    verbose=2,
+                    tensorboard_log="./highway_attention_ppo1/")
+        # Train the agent
+        model_tr3.learn(total_timesteps=300*1000, tb_log_name="second_run")
+        model_tr3.save("ppo-highway_tr3")
 
 
 
