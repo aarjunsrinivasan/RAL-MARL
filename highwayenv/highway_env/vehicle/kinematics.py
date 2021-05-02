@@ -117,6 +117,7 @@ class Vehicle(RoadObject):
         """
         if action:
             self.action = action
+    
 
     def step(self, dt: float) -> None:
         """
@@ -219,6 +220,9 @@ class Vehicle(RoadObject):
             return (self.destination - self.position) / np.linalg.norm(self.destination - self.position)
         else:
             return np.zeros((2,))
+    
+    def set_observation_type(self, observation_type):
+        pass
 
     def to_dict(self, origin_vehicle: "Vehicle" = None, observe_intentions: bool = True) -> dict:
         d = {
