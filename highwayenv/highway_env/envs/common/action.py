@@ -5,7 +5,7 @@ import numpy as np
 from highway_env import utils
 from highway_env.vehicle.dynamics import BicycleVehicle
 from highway_env.vehicle.kinematics import Vehicle
-from highway_env.vehicle.controller import MDPVehicle
+from highway_env.vehicle.controller import MDPVehicle, AdvTrainingVehicle
 
 if TYPE_CHECKING:
     from highway_env.envs.common.abstract import AbstractEnv
@@ -223,6 +223,35 @@ class MultiAgentAction(ActionType):
             action_type.act(agent_action)
 
 
+class AdvTrainingActionType(DiscreteMetaAction):
+    def __init__(self,
+                    env: 'AbstractEnv',
+                    longitudinal: bool = True,
+                    lateral: bool = True,
+                    **kwargs) -> None:
+            """
+            Create a discrete action space of meta-actions.
+
+            :param env: the environment
+            :param longitudinal: include longitudinal actions
+            :param lateral: include lateral actions
+            """
+            super().__init__(env)
+            self.longitudinal = longitudinal
+            self.lateral = lateral
+            self.actions = self.ACTIONS_ALL if longitudinal and lateral \
+                else self.ACTIONS_LONGI if longitudinal \
+                else self.ACTIONS_LAT if lateral \
+                else None
+            if self.actions is None:
+                raise ValueError("At least longitudinal or lateral actions must be included")
+            self.actions_indexes = {v: k for k, v in self.actions.items()}
+        
+    @property
+    def vehicle_class(self) -> Callable:
+        return AdvTrainingVehicle
+
+
 def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
     if config["type"] == "ContinuousAction":
         return ContinuousAction(env, **config)
@@ -230,5 +259,7 @@ def action_factory(env: 'AbstractEnv', config: dict) -> ActionType:
         return DiscreteMetaAction(env, **config)
     elif config["type"] == "MultiAgentAction":
         return MultiAgentAction(env, **config)
+    elif config["type"] == "AdvTrainingAction":
+        return AdvTrainingActionType(env, **config)
     else:
         raise ValueError("Unknown action type")

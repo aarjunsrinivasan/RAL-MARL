@@ -8,7 +8,7 @@ from highway_env.envs.common.action import Action
 from highway_env.road.road import Road, RoadNetwork
 from highway_env.utils import near_split
 from highway_env.vehicle.controller import ControlledVehicle
-from highway_env.vehicle.controller import MDPVehicle
+from highway_env.vehicle.controller import MDPVehicle, AdvTrainingVehicle
 
 
 class HighwayEnv(AbstractEnv):
@@ -159,7 +159,7 @@ class HighwayEnvAdv(HighwayEnv):
     """
         Create some new random vehicles of a given type, and add them on the road.
     """
-    self.vehicle = MDPVehicle.create_random(self.road, 25, spacing=self.config["initial_spacing"]) # or ControlledVehicle?
+    self.vehicle = AdvTrainingVehicle.create_random(self.road, 25, spacing=self.config["initial_spacing"]) # or ControlledVehicle?
     self.road.vehicles.append(self.vehicle)
 
     self.adv_vehicles = []

@@ -8,6 +8,8 @@ from highway_env.vehicle.objects import Landmark
 if TYPE_CHECKING:
     from highway_env.vehicle import kinematics, objects
 
+from highway_env.vehicle.controller import AdvTrainingVehicle
+
 logger = logging.getLogger(__name__)
 
 LaneIndex = Tuple[str, str, int]
@@ -286,9 +288,11 @@ class Road(object):
             vehicles = vehicles[:count]
         return vehicles
 
-    def act(self) -> None:
+    def act(self, observation_type) -> None:
         """Decide the actions of each entity on the road."""
         for vehicle in self.vehicles:
+            if (isinstance(vehicle, AdvTrainingVehicle)):
+                vehicle.set_observation_type(observation_type)
             vehicle.act()
 
     def step(self, dt: float) -> None:
