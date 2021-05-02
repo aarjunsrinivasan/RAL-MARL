@@ -367,12 +367,12 @@ if __name__ == "__main__":
                     verbose=2,
                     tensorboard_log="./highway_attention_ppo1/")
         # Train the agent
-        model.learn(total_timesteps=200*1000)
+        model.learn(total_timesteps=300*1000, tb_log_name="first_run")
 
         # model.learn(total_timesteps=100000, tb_log_name="second_run", reset_num_timesteps=False)
 
         # Save the agent
-        model.save("ppo-highway")
+        model.save("ppo-highway_tr1")
 
 
 
@@ -394,11 +394,12 @@ if __name__ == "__main__":
                     verbose=2,
                     tensorboard_log="./highway_attention_ppo1/")
         # Train the agent
-        model_adv.learn(total_timesteps=200*1000)
+        model_adv.learn(total_timesteps=300*1000, tb_log_name="second_run")
+        model_adv.save("ppo-highway_tr2")
 
 
 
-
+    '''
     model = PPO.load("ppo-highway")
     env = make_configure_env(**env_kwargs)
     for _ in range(5):
@@ -408,3 +409,4 @@ if __name__ == "__main__":
             action, _ = model.predict(obs)
             obs, reward, done, info = env.step(action)
             env.render()
+    '''
