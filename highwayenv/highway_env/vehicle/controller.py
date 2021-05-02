@@ -316,7 +316,7 @@ class AdvTrainingVehicle(MDPVehicle):
         super().__init__(road, position, heading, speed, target_lane_index, target_speed, route)
         self.speed_index = self.speed_to_index(self.target_speed)
         self.target_speed = self.index_to_speed(self.speed_index)
-        self.training_status = False
+        self.training_status = True
         self.policy = None
         self.observation_type = None
 
@@ -339,6 +339,7 @@ class AdvTrainingVehicle(MDPVehicle):
     @property
     def is_training(self):
         return self.training_status
+
 
 
     def act(self, action: Union[dict, str] = None) -> None:

@@ -140,6 +140,7 @@ class HighwayEnvAdv(HighwayEnv):
 
   def __init__(self):
     config = self.DEFAULT_CONFIG.copy()
+    self.__is_adv_training = False
     super(HighwayEnvAdv, self).__init__(config)
     self.steps = 0
     self.reset()
@@ -153,7 +154,10 @@ class HighwayEnvAdv(HighwayEnv):
   def step(self, action):
     self.steps += 1
     return super(HighwayEnvAdv, self).step(action)
-  
+
+  def switch_to_adv_training(self, status):
+      self.__is_adv_training = status
+
 
   def _create_vehicles(self):
     """
@@ -169,6 +173,61 @@ class HighwayEnvAdv(HighwayEnv):
       adv_vehicle = vehicles_type.create_random(self.road)
       self.adv_vehicles.append(adv_vehicle)
       self.road.vehicles.append(adv_vehicle)
+
+
+  def _reward(self, action: Action) -> float:
+        """
+        The reward is defined to foster driving at high speed, on the rightmost lanes, and to avoid collisions.
+        :param action: the last action performed
+        :return: the corresponding reward
+        """
+        if (self.__is_adv_training):
+            return self.adv_reward(action)
+        else:
+            return self.ego_agent_reward(action)
+        
+  def adv_reward(self, action: Action) -> float:
+    neighbours = self.road.network.all_side_lanes(self.vehicle.lane_index)
+    lane = self.vehicle.target_lane_index[2] if isinstance(self.vehicle, ControlledVehicle) \
+        else self.vehicle.lane_index[2]
+    scaled_speed = utils.lmap(self.vehicle.speed, self.config["reward_speed_range"], [0, 1])
+    collision_reward = self.get_collision_reward()
+    reward = \
+        + collision_reward \
+        + self.HIGH_SPEED_REWARD * np.clip(scaled_speed, 0, 1)
+
+    reward = utils.lmap(reward,
+                        [collision_reward, self.HIGH_SPEED_REWARD],
+                        [0, 1])
+    reward = 0 if not self.vehicle.on_road else reward
+    return reward 
+
+
+  def ego_agent_reward(self, action: Action) -> float:
+    neighbours = self.road.network.all_side_lanes(self.vehicle.lane_index)
+    lane = self.vehicle.target_lane_index[2] if isinstance(self.vehicle, ControlledVehicle) \
+        else self.vehicle.lane_index[2]
+    scaled_speed = utils.lmap(self.vehicle.speed, self.config["reward_speed_range"], [0, 1])
+    reward = \
+        + self.config["collision_reward"] * self.vehicle.crashed \
+        + self.RIGHT_LANE_REWARD * lane / max(len(neighbours) - 1, 1) \
+        + self.HIGH_SPEED_REWARD * np.clip(scaled_speed, 0, 1)
+    reward = utils.lmap(reward,
+                        [self.config["collision_reward"], self.HIGH_SPEED_REWARD + self.RIGHT_LANE_REWARD],
+                        [0, 1])
+    reward = 0 if not self.vehicle.on_road else reward
+    return reward
+
+
+  def get_collision_reward(self):
+      if (self.vehicle.crashed and self.road.vehicles[1].crashed):
+          return 0.5
+      if (not self.vehicle.crashed and self.road.vehicles[1].crashed):
+          return 1
+      if (self.vehicle.crashed and not self.road.vehicles[1].crashed):
+          return -1
+      return 0
+
     
   
 

@@ -378,6 +378,8 @@ if __name__ == "__main__":
 
         ## Training adv agent and set ego agents policy as the model that was trained
         env = make_configure_env(**env_kwargs_adv)
+        env.switch_to_adv_training(True)  # this takes care to use the adv reward function 
+        env.road.vehicles[1].freezeTraining()
         env.road.vehicles[1].set_policy(model) ## controlled vehicle in the prev training is now the other vehicle
         '''
             tr1: c: v1: advTr, v2:idm -> road [v1, v2:IDMPolicy]
